@@ -24,7 +24,10 @@ class Exercise(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     category = db.Column(db.String(50), nullable=False)
-    equipment_needed = db.Column(db.boolean, nullable=False)
+    equipment_needed = db.Column(db.Boolean, nullable=False)
+
+    # Relationship between Excercise and WorkoutExcercises
+    workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise', cascade='all, delete-orphan')
 
 class Workout(db.Model):
     __tablename__ = 'workouts'
