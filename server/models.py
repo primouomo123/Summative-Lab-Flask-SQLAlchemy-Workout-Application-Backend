@@ -19,6 +19,9 @@ class WorkoutExercises(db.Model):
     sets = db.Column(db.Integer, nullable=False)
     duration_seconds = db.Column(db.Integer, nullable=True)
 
+    # Relationship between WorkoutExercises and Exercise
+    exercise = db.relationship('Exercise', back_populates='workout_exercises')
+
 class Exercise(db.Model):
     __tablename__ = 'exercises'
     
@@ -27,7 +30,7 @@ class Exercise(db.Model):
     category = db.Column(db.String(50), nullable=False)
     equipment_needed = db.Column(db.Boolean, nullable=False)
 
-    # Relationship between Excercise and WorkoutExcercises
+    # Relationship between Exercise and WorkoutExercises
     workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise', cascade='all, delete-orphan')
     
     # Association Proxy to access workouts directly from Exercise through WorkoutExercises
