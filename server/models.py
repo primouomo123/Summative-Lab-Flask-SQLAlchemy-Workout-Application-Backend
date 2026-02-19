@@ -26,6 +26,17 @@ class WorkoutExercises(db.Model):
         CheckConstraint('duration_seconds >= 0', name='check_duration_non_negative'),
     )
 
+    # Validations to ensure data integrity at the application level
+    @validates('reps', 'sets', 'duration_seconds')
+    def validate_reps(self, key, value):
+        if not isinstance(value, int):
+            raise TypeError(f'{key} must be integers')
+        if value <= 0:
+            raise ValueError(f'{key} must be positive integers')
+        return value
+    
+
+
     # Relationship between WorkoutExercises and Exercise
     exercise = db.relationship('Exercise', back_populates='workout_exercises')
 
