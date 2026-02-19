@@ -5,3 +5,5 @@ from marshmallow import Schema, fields, validate, ValidationError
 
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
+
+# Define Models here
