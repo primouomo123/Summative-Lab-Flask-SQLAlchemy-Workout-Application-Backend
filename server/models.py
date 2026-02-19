@@ -22,6 +22,9 @@ class WorkoutExercises(db.Model):
     # Relationship between WorkoutExercises and Exercise
     exercise = db.relationship('Exercise', back_populates='workout_exercises')
 
+    # Relationship between WorkoutExercises and Workout
+    workout = db.relationship('Workout', back_populates='workout_exercises')
+
 class Exercise(db.Model):
     __tablename__ = 'exercises'
     
