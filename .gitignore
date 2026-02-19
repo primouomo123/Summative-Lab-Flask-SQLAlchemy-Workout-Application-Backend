@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+ENV/
+
+# Editor settings
+.vscode/
+
+# SQLite and other local databases
+*.sqlite3
+*.db
+
+# Instance folder (Flask runtime secrets)
+instance/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# dotenv environment variables
+.env
+.env.*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+ENV/
+
+# Editor settings
+.vscode/
+
+# SQLite and other local databases
+*.sqlite3
+*.db
+
+# Instance folder (Flask runtime secrets)
+instance/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# dotenv environment variables
+.env
+.env.*

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from app import app
 from models import db, Exercise, Workout, WorkoutExercises
+import datetime
 
 with app.app_context():
 	# Clear existing data
@@ -11,9 +12,9 @@ with app.app_context():
 	ex1 = Exercise(name="Push Up", category="Strength", equipment_needed=False)
 	ex2 = Exercise(name="Squat", category="Strength", equipment_needed=False)
 	ex3 = Exercise(name="Jump Rope", category="Cardio", equipment_needed=True)
-	# Add sample workouts
-	w1 = Workout(date="2026-02-19", duration_minutes=30, notes="Morning workout")
-	w2 = Workout(date="2026-02-18", duration_minutes=45, notes="Evening workout")
+	# Add sample workouts with date objects
+	w1 = Workout(date=datetime.date(2026, 2, 19), duration_minutes=30, notes="Morning workout")
+	w2 = Workout(date=datetime.date(2026, 2, 18), duration_minutes=45, notes="Evening workout")
 	# Add sample workout-exercise associations
 	we1 = WorkoutExercises(workout=w1, exercise=ex1, reps=15, sets=3, duration_seconds=0)
 	we2 = WorkoutExercises(workout=w1, exercise=ex2, reps=20, sets=3, duration_seconds=0)

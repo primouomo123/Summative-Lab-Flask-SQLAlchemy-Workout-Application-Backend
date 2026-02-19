@@ -29,12 +29,20 @@ class WorkoutExercises(db.Model):
     )
 
     # Validations to ensure data integrity at the application level
-    @validates('reps', 'sets', 'duration_seconds')
+    @validates('reps', 'sets')
     def validate_reps(self, key, value):
         if not isinstance(value, int):
             raise TypeError(f'{key} must be integers')
         if value <= 0:
             raise ValueError(f'{key} must be positive integers')
+        return value
+    
+    @validates('duration_seconds')
+    def validate_duration_seconds(self, key, value):
+        if not isinstance(value, int):
+            raise TypeError(f'{key} must be an integer')
+        if value < 0:
+            raise ValueError(f'{key} must be a non-negative integer')
         return value
     
 
