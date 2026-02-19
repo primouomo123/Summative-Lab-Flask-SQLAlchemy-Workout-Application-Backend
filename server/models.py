@@ -99,6 +99,31 @@ class Workout(db.Model):
         CheckConstraint('length(notes) > 0', name='check_notes_length'),
     )
 
+    # Validations to ensure data integrity at the application level
+    @validates('date')
+    def validate_date(self, key, value):
+        if not isinstance(value, date):
+            raise TypeError(f'{key} must be a datetime.date object')
+        if not value:
+            raise ValueError(f'{key} cannot be empty')
+        return value
+    
+    @validates('duration_minutes')
+    def validate_duration_minutes(self, key, value):
+        if not isinstance(value, int):
+            raise TypeError(f'{key} must be an integer')
+        if value <= 0:
+            raise ValueError(f'{key} must be a positive integer')
+        return value
+    
+    @validates('notes')
+    def validate_notes(self, key, value):
+        if not isinstance(value, str):
+            raise TypeError(f'{key} must be a string')
+        if len(value) == 0 or len(value) > 255:
+            raise ValueError(f'{key} must be between 1 and 255 characters long')
+        return value
+
     # Relationship between Workout and WorkoutExercises
     workout_exercises = db.relationship('WorkoutExercises', back_populates='workout', cascade='all, delete-orphan')
 
