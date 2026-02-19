@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
+from sqlalchemy.ext.associationproxy import association_proxy
 from marshmallow import Schema, fields, validate, ValidationError
 
 metadata = MetaData()
@@ -18,13 +19,26 @@ class WorkoutExercises(db.Model):
     sets = db.Column(db.Integer, nullable=False)
     duration_seconds = db.Column(db.Integer, nullable=True)
 
+    # Relationship between WorkoutExercises and Exercise
+    exercise = db.relationship('Exercise', back_populates='workout_exercises')
+
+    # Relationship between WorkoutExercises and Workout
+    workout = db.relationship('Workout', back_populates='workout_exercises')
+
 class Exercise(db.Model):
     __tablename__ = 'exercises'
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     category = db.Column(db.String(50), nullable=False)
-    equipment_needed = db.Column(db.boolean, nullable=False)
+    equipment_needed = db.Column(db.Boolean, nullable=False)
+
+    # Relationship between Exercise and WorkoutExercises
+    workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise', cascade='all, delete-orphan')
+    
+    # Association Proxy to access workouts directly from Exercise through WorkoutExercises
+    workouts = association_proxy('workout_exercises', 'workout',
+                                 creator=lambda workout_object: WorkoutExercises(workout=workout_object))
 
 class Workout(db.Model):
     __tablename__ = 'workouts'
@@ -33,3 +47,10 @@ class Workout(db.Model):
     date = db.Column(db.Date, nullable=False)
     duration_minutes = db.Column(db.Integer, nullable=False)
     notes = db.Column(db.String(255))
+
+    # Relationship between Workout and WorkoutExercises
+    workout_exercises = db.relationship('WorkoutExercises', back_populates='workout', cascade='all, delete-orphan')
+
+    # Association Proxy to access exercises directly from Workout through WorkoutExercises
+    exercises = association_proxy('workout_exercises', 'exercise',
+                                 creator=lambda exercise_object: WorkoutExercises(exercise=exercise_object))
