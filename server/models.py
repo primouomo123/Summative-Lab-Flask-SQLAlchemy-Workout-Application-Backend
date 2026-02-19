@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
+from sqlalchemy.ext.associationproxy import association_proxy
 from marshmallow import Schema, fields, validate, ValidationError
 
 metadata = MetaData()
@@ -28,6 +29,10 @@ class Exercise(db.Model):
 
     # Relationship between Excercise and WorkoutExcercises
     workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise', cascade='all, delete-orphan')
+    
+    # Association Proxy to access workouts directly from Exercise through WorkoutExercises
+    workouts = association_proxy('workout_exercises', 'workout',
+                                 creator=lambda workouts_object: WorkoutExercises(workouts=workouts_object))
 
 class Workout(db.Model):
     __tablename__ = 'workouts'
