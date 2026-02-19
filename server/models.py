@@ -4,6 +4,8 @@ from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from marshmallow import Schema, fields, validate, ValidationError
 
+from datetime import date
+
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
 
@@ -47,15 +49,34 @@ class Exercise(db.Model):
     __tablename__ = 'exercises'
     
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
     category = db.Column(db.String, nullable=False)
     equipment_needed = db.Column(db.Boolean, nullable=False)
 
+    categories = ('Cardio', 'Strength', 'Flexibility', 'Balance')
+
     # Table-level constraints to ensure data integrity
     __table_args__ = (
-        CheckConstraint('length(name) > 0 and length(name) <= 100', name='check_name_length'),
-        CheckConstraint("category IN ('Cardio', 'Strength', 'Flexibility', 'Balance')", name='check_category_valid'),
+        CheckConstraint('length(name) > 0', name='check_name_length'),
+        CheckConstraint(f'category IN ({", ".join(repr(c) for c in categories)})', name='check_category_valid'),
     )
+
+    # Validations to ensure data integrity at the application level
+    @validates('name')
+    def validate_name(self, key, value):
+        if not isinstance(value, str):
+            raise TypeError(f'{key} must be a string')
+        if len(value) == 0:
+            raise ValueError(f'{key} cannot be empty')
+        return value
+
+    @validates('category')
+    def validate_category(self, key, value):
+        if not isinstance(value, str):
+            raise TypeError(f'{key} must be a string')
+        if value not in self.categories:
+            raise ValueError(f'Invalid {key}: {value}, you must choose from {self.categories}')
+        return value
 
     # Relationship between Exercise and WorkoutExercises
     workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise', cascade='all, delete-orphan')
@@ -75,7 +96,7 @@ class Workout(db.Model):
     # Table-level constraints to ensure data integrity
     __table_args__ = (
         CheckConstraint('duration_minutes > 0', name='check_duration_positive'),
-        CheckConstraint('length(notes) > 0 and length(notes) <= 255', name='check_notes_length'),
+        CheckConstraint('length(notes) > 0', name='check_notes_length'),
     )
 
     # Relationship between Workout and WorkoutExercises
