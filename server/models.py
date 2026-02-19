@@ -6,6 +6,18 @@ from marshmallow import Schema, fields, validate, ValidationError
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
 
+
+# Join table for many-to-many relationship between Workout and Exercise
+class WorkoutExercises(db.Model):
+    __tablename__ = 'workout_exercises'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    workout_id = db.Column(db.Integer, db.ForeignKey('workouts.id'), nullable=False)
+    exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'), nullable=False)
+    reps = db.Column(db.Integer, nullable=False)
+    sets = db.Column(db.Integer, nullable=False)
+    duration_seconds = db.Column(db.Integer, nullable=True)
+
 class Exercise(db.Model):
     __tablename__ = 'exercises'
     
