@@ -32,7 +32,7 @@ class Exercise(db.Model):
     
     # Association Proxy to access workouts directly from Exercise through WorkoutExercises
     workouts = association_proxy('workout_exercises', 'workout',
-                                 creator=lambda workouts_object: WorkoutExercises(workouts=workouts_object))
+                                 creator=lambda workout_object: WorkoutExercises(workout=workout_object))
 
 class Workout(db.Model):
     __tablename__ = 'workouts'
@@ -44,3 +44,7 @@ class Workout(db.Model):
 
     # Relationship between Workout and WorkoutExercises
     workout_exercises = db.relationship('WorkoutExercises', back_populates='workout', cascade='all, delete-orphan')
+
+    # Association Proxy to access exercises directly from Workout through WorkoutExercises
+    exercises = association_proxy('workout_exercises', 'exercise',
+                                 creator=lambda exercise_object: WorkoutExercises(exercise=exercise_object))
