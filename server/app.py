@@ -83,7 +83,12 @@ def get_exercises():
 # Show an exercise and associated workouts
 @app.route('/exercises/<id>', methods=['GET'])
 def get_exercise(id):
-    pass
+    exercise = Exercise.query.get(id)
+    if exercise:
+        body = ExerciseSchema().dump(exercise)
+        return jsonify(body), 200
+    else:
+        return jsonify({'error': 'Exercise not found'}), 404
 
 # Create an exercise
 @app.route('/exercises', methods=['POST'])
