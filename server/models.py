@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData, CheckConstraint
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
-from marshmallow import Schema, fields, validate, ValidationError, RAISE
+from marshmallow import Schema, fields, validate, ValidationError, RAISE, post_load
 
 from datetime import date as dt_date
 
@@ -118,6 +118,10 @@ class WorkoutExercisesSchema(Schema):
         if value < 0:
             raise ValidationError('duration_seconds must be a non-negative integer')
         return value
+    
+    @post_load
+    def make_workout_exercises(self, data, **kwargs):
+        return WorkoutExercises(**data)
 
 
 # Exercise Table Model
@@ -203,6 +207,10 @@ class ExerciseSchema(Schema):
         if not isinstance(value, bool):
             raise ValidationError('equipment_needed must be a boolean')
         return value
+    
+    @post_load
+    def make_exercise(self, data, **kwargs):
+        return Exercise(**data)
 
 
 
@@ -289,3 +297,7 @@ class WorkoutSchema(Schema):
         if len(value) == 0 or len(value) > 255:
             raise ValidationError('notes must be between 1 and 255 characters long')
         return value
+    
+    @post_load
+    def make_workout(self, data, **kwargs):
+        return Workout(**data)
