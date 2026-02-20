@@ -51,7 +51,15 @@ def get_workout(id):
 # Create a workout
 @app.route('/workouts', methods=['POST'])
 def create_workout():
-    pass
+    try:
+        workout_data = request.get_json()
+        workout = WorkoutSchema().load(workout_data)
+        db.session.add(workout)
+        db.session.commit()
+        body = WorkoutSchema().dump(workout)
+        return jsonify(body), 201
+    except ValidationError as err:
+        return jsonify(err.messages), 400
 
 # Stretch goal: delete associated WorkoutExercises
 # Delete a workout
