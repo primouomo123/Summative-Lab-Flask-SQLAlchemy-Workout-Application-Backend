@@ -256,3 +256,25 @@ class WorkoutSchema(Schema):
     date = fields.Date(required=True)
     duration_minutes = fields.Int(required=True, validate=validate.Range(min=1))
     notes = fields.Str(required=True, validate=validate.Length(min=1, max=255))
+
+    class Meta:
+        unknown = RAISE  # Raise an error if unknown fields are included in the input data
+    
+    # Schema Validations to ensure data integrity at the application level
+    @validates('date')
+    def validate_date(self, value):
+        if not isinstance(value, date):
+            raise ValidationError('date must be a datetime.date object')
+        return value
+    
+    @validates('duration_minutes')
+    def validate_duration_minutes(self, value):
+        if value <= 0:
+            raise ValidationError('duration_minutes must be a positive integer')
+        return value
+    
+    @validates('notes')
+    def validate_notes(self, value):
+        if len(value) == 0 or len(value) > 255:
+            raise ValidationError('notes must be between 1 and 255 characters long')
+        return value
