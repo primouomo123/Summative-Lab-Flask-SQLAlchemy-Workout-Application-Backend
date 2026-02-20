@@ -41,7 +41,12 @@ def get_workouts():
 # Show a single workout with its associated exercises
 @app.route('/workouts/<id>', methods=['GET'])
 def get_workout(id):
-    pass
+    workout = Workout.query.get(id)
+    if workout:
+        body = WorkoutSchema().dump(workout)
+        return jsonify(body), 200
+    else:
+        return jsonify({'error': 'Workout not found'}), 404
 
 # Create a workout
 @app.route('/workouts', methods=['POST'])
