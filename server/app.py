@@ -34,7 +34,8 @@ def home():
 @app.route('/workouts', methods=['GET'])
 def get_workouts():
     workouts = Workout.query.all()
-    body = WorkoutSchema(many=True).dump(workouts)
+    schema = WorkoutSchema(many=True, exclude=('workout_exercises', 'exercises'))
+    body = schema.dump(workouts)
     return jsonify(body), 200
 
 # Stretch goal: include reps/sets/duration data from WorkoutExercises
@@ -42,8 +43,9 @@ def get_workouts():
 @app.route('/workouts/<int:id>', methods=['GET'])
 def get_workout(id):
     workout = Workout.query.get(id)
+    schema = WorkoutSchema()
     if workout:
-        body = WorkoutSchema().dump(workout)
+        body = schema.dump(workout)
         return jsonify(body), 200
     else:
         return jsonify({'error': 'Workout not found'}), 404
@@ -53,10 +55,11 @@ def get_workout(id):
 def create_workout():
     try:
         workout_data = request.get_json()
-        workout = WorkoutSchema().load(workout_data)
+        schema = WorkoutSchema()
+        workout = schema.load(workout_data)
         db.session.add(workout)
         db.session.commit()
-        body = WorkoutSchema().dump(workout)
+        body = schema.dump(workout)
         return jsonify(body), 201
     except ValidationError as err:
         return jsonify(err.messages), 400
@@ -77,15 +80,17 @@ def delete_workout(id):
 @app.route('/exercises', methods=['GET'])
 def get_exercises():
     exercises = Exercise.query.all()
-    body = ExerciseSchema(many=True).dump(exercises)
+    schema = ExerciseSchema(many=True, exclude=('workout_exercises', 'workouts'))
+    body = schema.dump(exercises)
     return jsonify(body), 200
 
 # Show an exercise and associated workouts
 @app.route('/exercises/<int:id>', methods=['GET'])
 def get_exercise(id):
     exercise = Exercise.query.get(id)
+    schema = ExerciseSchema()
     if exercise:
-        body = ExerciseSchema().dump(exercise)
+        body = schema.dump(exercise)
         return jsonify(body), 200
     else:
         return jsonify({'error': 'Exercise not found'}), 404
@@ -95,10 +100,11 @@ def get_exercise(id):
 def create_exercise():
     try:
         exercise_data = request.get_json()
-        exercise = ExerciseSchema().load(exercise_data)
+        schema = ExerciseSchema()
+        exercise = schema.load(exercise_data)
         db.session.add(exercise)
         db.session.commit()
-        body = ExerciseSchema().dump(exercise)
+        body = schema.dump(exercise)
         return jsonify(body), 201
     except ValidationError as err:
         return jsonify(err.messages), 400
@@ -124,18 +130,14 @@ def add_exercise_to_workout(workout_id, exercise_id):
         return jsonify({'error': 'Workout or Exercise not found'}), 404
     
     try:
-        data = request.get_json()
-        workout_exercise_data = {
-            'workout_id': workout_id,
-            'exercise_id': exercise_id,
-            'reps': data.get('reps'),
-            'sets': data.get('sets'),
-            'duration_seconds': data.get('duration_seconds')
-        }
-        workout_exercise = WorkoutExercisesSchema().load(workout_exercise_data)
+        workout_exercise_data = request.get_json()
+        workout_exercise_data['workout_id'] = workout_id
+        workout_exercise_data['exercise_id'] = exercise_id
+        schema = WorkoutExercisesSchema()
+        workout_exercise = schema.load(workout_exercise_data)
         db.session.add(workout_exercise)
         db.session.commit()
-        body = WorkoutExercisesSchema().dump(workout_exercise)
+        body = schema.dump(workout_exercise)
         return jsonify(body), 201
     except ValidationError as err:
         return jsonify(err.messages), 400

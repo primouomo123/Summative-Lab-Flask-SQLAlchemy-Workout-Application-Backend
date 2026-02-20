@@ -89,31 +89,31 @@ class WorkoutExercisesSchema(Schema):
     
     # Schema Validations to ensure data integrity at the application level
     @schema_validates('workout_id')
-    def validate_workout_id(self, value):
+    def validate_workout_id(self, value, **kwargs):
         if not Workout.query.get(value):
             raise ValidationError(f'workout_id {value} does not reference an existing workout') 
         return value
     
     @schema_validates('exercise_id')
-    def validate_exercise_id(self, value):
+    def validate_exercise_id(self, value, **kwargs):
         if not Exercise.query.get(value):
             raise ValidationError(f'exercise_id {value} does not reference an existing exercise') 
         return value
     
     @schema_validates('reps')
-    def validate_reps(self, value):
+    def validate_reps(self, value, **kwargs):
         if value <= 0:
             raise ValidationError('reps must be a positive integer')
         return value
     
     @schema_validates('sets')
-    def validate_sets(self, value):
+    def validate_sets(self, value, **kwargs):
         if value <= 0:
             raise ValidationError('sets must be a positive integer')
         return value
     
     @schema_validates('duration_seconds')
-    def validate_duration_seconds(self, value):
+    def validate_duration_seconds(self, value, **kwargs):
         if value < 0:
             raise ValidationError('duration_seconds must be a non-negative integer')
         return value
@@ -191,19 +191,19 @@ class ExerciseSchema(Schema):
     
     # Schema Validations to ensure data integrity at the application level
     @schema_validates('name')
-    def validate_name(self, value):
+    def validate_name(self, value, **kwargs):
         if len(value) == 0:
             raise ValidationError('name cannot be empty')
         return value
     
     @schema_validates('category')
-    def validate_category(self, value):
+    def validate_category(self, value, **kwargs):
         if value not in Exercise.categories:
             raise ValidationError(f'Invalid category: {value}, you must choose from {Exercise.categories}')
         return value
     
     @schema_validates('equipment_needed')
-    def validate_equipment_needed(self, value):
+    def validate_equipment_needed(self, value, **kwargs):
         if not isinstance(value, bool):
             raise ValidationError('equipment_needed must be a boolean')
         return value
@@ -281,20 +281,20 @@ class WorkoutSchema(Schema):
     
     # Schema Validations to ensure data integrity at the application level
     @schema_validates('date')
-    def validate_date(self, value):
+    def validate_date(self, value, **kwargs):
         # Ensure date is not in the future
         if value > dt_date.today():
             raise ValidationError("Workout date cannot be in the future.")
         return value
     
     @schema_validates('duration_minutes')
-    def validate_duration_minutes(self, value):
+    def validate_duration_minutes(self, value, **kwargs):
         if value <= 0:
             raise ValidationError('duration_minutes must be a positive integer')
         return value
     
     @schema_validates('notes')
-    def validate_notes(self, value):
+    def validate_notes(self, value, **kwargs):
         if len(value) == 0 or len(value) > 255:
             raise ValidationError('notes must be between 1 and 255 characters long')
         return value
