@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData, CheckConstraint
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
-from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow import Schema, fields, validate, ValidationError, RAISE
 
 from datetime import date
 
@@ -81,6 +81,39 @@ class WorkoutExercisesSchema(Schema):
     reps = fields.Int(required=True, validate=validate.Range(min=1))
     sets = fields.Int(required=True, validate=validate.Range(min=1))
     duration_seconds = fields.Int(required=True, validate=validate.Range(min=0))
+
+    class Meta:
+        unknown = RAISE  # Raise an error if unknown fields are included in the input data
+    
+    @validates('workout_id')
+    def validate_workout_id(self, value):
+        if not Workout.query.get(value):
+            raise ValidationError(f'workout_id {value} does not reference an existing workout') 
+        return value
+    
+    @validates('exercise_id')
+    def validate_exercise_id(self, value):
+        if not Exercise.query.get(value):
+            raise ValidationError(f'exercise_id {value} does not reference an existing exercise') 
+        return value
+    
+    @validates('reps')
+    def validate_reps(self, value):
+        if value <= 0:
+            raise ValidationError('reps must be a positive integer')
+        return value
+    
+    @validates('sets')
+    def validate_sets(self, value):
+        if value <= 0:
+            raise ValidationError('sets must be a positive integer')
+        return value
+    
+    @validates('duration_seconds')
+    def validate_duration_seconds(self, value):
+        if value < 0:
+            raise ValidationError('duration_seconds must be a non-negative integer')
+        return value
 
 
 # Exercise Table Model
