@@ -53,6 +53,9 @@ class WorkoutExercises(db.Model):
     # Relationship between WorkoutExercises and Workout
     workout = db.relationship('Workout', back_populates='workout_exercises')
 
+    def __repr__(self):
+        return f'<WorkoutExercises id={self.id} workout_id={self.workout_id} exercise_id={self.exercise_id} reps={self.reps} sets={self.sets} duration_seconds={self.duration_seconds}>'
+
 class Exercise(db.Model):
     __tablename__ = 'exercises'
     
@@ -92,6 +95,9 @@ class Exercise(db.Model):
     # Association Proxy to access workouts directly from Exercise through WorkoutExercises
     workouts = association_proxy('workout_exercises', 'workout',
                                  creator=lambda workout_object: WorkoutExercises(workout=workout_object))
+    
+    def __repr__(self):
+        return f'<Exercise id={self.id} name={self.name} category={self.category} equipment_needed={self.equipment_needed}>'
 
 class Workout(db.Model):
     __tablename__ = 'workouts'
@@ -138,3 +144,6 @@ class Workout(db.Model):
     # Association Proxy to access exercises directly from Workout through WorkoutExercises
     exercises = association_proxy('workout_exercises', 'exercise',
                                  creator=lambda exercise_object: WorkoutExercises(exercise=exercise_object))
+    
+    def __repr__(self):
+        return f'<Workout id={self.id} date={self.date} duration_minutes={self.duration_minutes} notes={self.notes}>'
