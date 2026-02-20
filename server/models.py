@@ -10,7 +10,7 @@ metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
 
 
-# Join table for many-to-many relationship between Workout and Exercise
+# Join table Model for many-to-many relationship between Workout and Exercise
 class WorkoutExercises(db.Model):
     __tablename__ = 'workout_exercises'
     
@@ -43,9 +43,7 @@ class WorkoutExercises(db.Model):
             raise TypeError(f'{key} must be an integer')
         if value < 0:
             raise ValueError(f'{key} must be a non-negative integer')
-        return value
-    
-
+        return value 
 
     # Relationship between WorkoutExercises and Exercise
     exercise = db.relationship('Exercise', back_populates='workout_exercises')
@@ -56,6 +54,18 @@ class WorkoutExercises(db.Model):
     def __repr__(self):
         return f'<WorkoutExercises id={self.id} workout_id={self.workout_id} exercise_id={self.exercise_id} reps={self.reps} sets={self.sets} duration_seconds={self.duration_seconds}>'
 
+
+# WorkoutExercise Schema for serialization/deserialization
+class WorkoutExercisesSchema(Schema):
+    id = fields.Int(dump_only=True)
+    workout_id = fields.Int(required=True)
+    exercise_id = fields.Int(required=True)
+    reps = fields.Int(required=True, validate=validate.Range(min=1))
+    sets = fields.Int(required=True, validate=validate.Range(min=1))
+    duration_seconds = fields.Int(required=True, validate=validate.Range(min=0))
+
+
+# Exercise Table Model
 class Exercise(db.Model):
     __tablename__ = 'exercises'
     
@@ -98,6 +108,16 @@ class Exercise(db.Model):
     
     def __repr__(self):
         return f'<Exercise id={self.id} name={self.name} category={self.category} equipment_needed={self.equipment_needed}>'
+
+
+# Exercise Schema for serialization/deserialization
+class ExerciseSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    category = fields.Str(required=True, validate=validate.OneOf(Exercise.categories))
+    equipment_needed = fields.Bool(required=True)
+
+
 
 class Workout(db.Model):
     __tablename__ = 'workouts'
@@ -147,3 +167,11 @@ class Workout(db.Model):
     
     def __repr__(self):
         return f'<Workout id={self.id} date={self.date} duration_minutes={self.duration_minutes} notes={self.notes}>'
+
+
+# Workout Schema for serialization/deserialization
+class WorkoutSchema(Schema):
+    id = fields.Int(dump_only=True)
+    date = fields.Date(required=True)
+    duration_minutes = fields.Int(required=True, validate=validate.Range(min=1))
+    notes = fields.Str(required=True, validate=validate.Length(min=1, max=255))
