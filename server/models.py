@@ -26,15 +26,17 @@ class WorkoutExercises(db.Model):
         CheckConstraint('reps > 0', name='check_reps_positive'),
         CheckConstraint('sets > 0', name='check_sets_positive'),
         CheckConstraint('duration_seconds >= 0', name='check_duration_non_negative'),
+        CheckConstraint('workout_id IN (SELECT id FROM workouts)', name='check_workout_id_valid'),
+        CheckConstraint('exercise_id IN (SELECT id FROM exercises)', name='check_exercise_id_valid'),
     )
 
     # Validations to ensure data integrity at the application level
     @validates('reps', 'sets')
     def validate_reps(self, key, value):
         if not isinstance(value, int):
-            raise TypeError(f'{key} must be integers')
+            raise TypeError(f'{key} must be an integer')
         if value <= 0:
-            raise ValueError(f'{key} must be positive integers')
+            raise ValueError(f'{key} must be a positive integer')
         return value
     
     @validates('duration_seconds')
@@ -43,7 +45,23 @@ class WorkoutExercises(db.Model):
             raise TypeError(f'{key} must be an integer')
         if value < 0:
             raise ValueError(f'{key} must be a non-negative integer')
-        return value 
+        return value
+    
+    @validates('workout_id')
+    def validate_workout_id(self, key, value):
+        if not isinstance(value, int):
+            raise TypeError(f'{key} must be an integer')
+        if not Workout.query.get(value):
+            raise ValueError(f'{key} must reference an existing workout id')
+        return value
+
+    @validates('exercise_id')
+    def validate_exercise_id(self, key, value):
+        if not isinstance(value, int):
+            raise TypeError(f'{key} must be an integer')
+        if not Exercise.query.get(value):
+            raise ValueError(f'{key} must reference an existing exercise id')
+        return value
 
     # Relationship between WorkoutExercises and Exercise
     exercise = db.relationship('Exercise', back_populates='workout_exercises')
@@ -80,6 +98,7 @@ class Exercise(db.Model):
     __table_args__ = (
         CheckConstraint('length(name) > 0', name='check_name_length'),
         CheckConstraint(f'category IN ({", ".join(repr(c) for c in categories)})', name='check_category_valid'),
+        CheckConstraint('equipment_needed IN (0, 1)', name='check_equipment_needed_boolean'),
     )
 
     # Validations to ensure data integrity at the application level
@@ -97,6 +116,12 @@ class Exercise(db.Model):
             raise TypeError(f'{key} must be a string')
         if value not in self.categories:
             raise ValueError(f'Invalid {key}: {value}, you must choose from {self.categories}')
+        return value
+    
+    @validates('equipment_needed')
+    def validate_equipment_needed(self, key, value):
+        if not isinstance(value, bool):
+            raise TypeError(f'{key} must be a boolean')
         return value
 
     # Relationship between Exercise and WorkoutExercises
