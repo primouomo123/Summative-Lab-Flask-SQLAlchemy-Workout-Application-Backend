@@ -39,7 +39,7 @@ def get_workouts():
 
 # Stretch goal: include reps/sets/duration data from WorkoutExercises
 # Show a single workout with its associated exercises
-@app.route('/workouts/<id>', methods=['GET'])
+@app.route('/workouts/<int:id>', methods=['GET'])
 def get_workout(id):
     workout = Workout.query.get(id)
     if workout:
@@ -63,7 +63,7 @@ def create_workout():
 
 # Stretch goal: delete associated WorkoutExercises
 # Delete a workout
-@app.route('/workouts/<id>', methods=['DELETE'])
+@app.route('/workouts/<int:id>', methods=['DELETE'])
 def delete_workout(id):
     workout = Workout.query.get(id)
     if workout:
@@ -81,7 +81,7 @@ def get_exercises():
     return jsonify(body), 200
 
 # Show an exercise and associated workouts
-@app.route('/exercises/<id>', methods=['GET'])
+@app.route('/exercises/<int:id>', methods=['GET'])
 def get_exercise(id):
     exercise = Exercise.query.get(id)
     if exercise:
@@ -105,7 +105,7 @@ def create_exercise():
 
 # Stretch goal: delete associated WorkoutExercises
 # Delete an exercise
-@app.route('/exercises/<id>', methods=['DELETE'])
+@app.route('/exercises/<int:id>', methods=['DELETE'])
 def delete_exercise(id):
     exercise = Exercise.query.get(id)
     if exercise:
@@ -116,7 +116,7 @@ def delete_exercise(id):
         return jsonify({'error': 'Exercise not found'}), 404
 
 # Add an exercise to a workout, including reps/sets/duration
-@app.route('/workouts/<workout_id>/exercises/<exercise_id>/workout_exercises', methods=['POST'])
+@app.route('/workouts/<int:workout_id>/exercises/<int:exercise_id>/workout_exercises', methods=['POST'])
 def add_exercise_to_workout(workout_id, exercise_id):
     workout = Workout.query.get(workout_id)
     exercise = Exercise.query.get(exercise_id)
