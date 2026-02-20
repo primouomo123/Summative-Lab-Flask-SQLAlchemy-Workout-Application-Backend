@@ -34,7 +34,8 @@ def home():
 @app.route('/workouts', methods=['GET'])
 def get_workouts():
     workouts = Workout.query.all()
-    pass
+    body = WorkoutSchema(many=True).dump(workouts)
+    return jsonify(body), 200
 
 # Stretch goal: include reps/sets/duration data from WorkoutExercises
 # Show a single workout with its associated exercises
