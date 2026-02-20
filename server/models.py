@@ -30,7 +30,7 @@ class WorkoutExercises(db.Model):
         CheckConstraint('exercise_id IN (SELECT id FROM exercises)', name='check_exercise_id_valid'),
     )
 
-    # Validations to ensure data integrity at the application level
+    # Model Validations to ensure data integrity at the application level
     @validates('reps', 'sets')
     def validate_reps(self, key, value):
         if not isinstance(value, int):
@@ -85,6 +85,7 @@ class WorkoutExercisesSchema(Schema):
     class Meta:
         unknown = RAISE  # Raise an error if unknown fields are included in the input data
     
+    # Schema Validations to ensure data integrity at the application level
     @validates('workout_id')
     def validate_workout_id(self, value):
         if not Workout.query.get(value):
@@ -134,7 +135,7 @@ class Exercise(db.Model):
         CheckConstraint('equipment_needed IN (0, 1)', name='check_equipment_needed_boolean'),
     )
 
-    # Validations to ensure data integrity at the application level
+    # Model Validations to ensure data integrity at the application level
     @validates('name')
     def validate_name(self, key, value):
         if not isinstance(value, str):
@@ -175,6 +176,28 @@ class ExerciseSchema(Schema):
     category = fields.Str(required=True, validate=validate.OneOf(Exercise.categories))
     equipment_needed = fields.Bool(required=True)
 
+    class Meta:
+        unknown = RAISE  # Raise an error if unknown fields are included in the input data
+    
+    # Schema Validations to ensure data integrity at the application level
+    @validates('name')
+    def validate_name(self, value):
+        if len(value) == 0:
+            raise ValidationError('name cannot be empty')
+        return value
+    
+    @validates('category')
+    def validate_category(self, value):
+        if value not in Exercise.categories:
+            raise ValidationError(f'Invalid category: {value}, you must choose from {Exercise.categories}')
+        return value
+    
+    @validates('equipment_needed')
+    def validate_equipment_needed(self, value):
+        if not isinstance(value, bool):
+            raise ValidationError('equipment_needed must be a boolean')
+        return value
+
 
 
 class Workout(db.Model):
@@ -191,7 +214,7 @@ class Workout(db.Model):
         CheckConstraint('length(notes) > 0', name='check_notes_length'),
     )
 
-    # Validations to ensure data integrity at the application level
+    # Model Validations to ensure data integrity at the application level
     @validates('date')
     def validate_date(self, key, value):
         if not isinstance(value, date):
