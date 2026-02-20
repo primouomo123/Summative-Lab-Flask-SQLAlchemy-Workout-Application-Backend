@@ -110,6 +110,14 @@ class Exercise(db.Model):
         return f'<Exercise id={self.id} name={self.name} category={self.category} equipment_needed={self.equipment_needed}>'
 
 
+# Exercise Schema for serialization/deserialization
+class ExerciseSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    category = fields.Str(required=True, validate=validate.OneOf(Exercise.categories))
+    equipment_needed = fields.Bool(required=True)
+
+
 
 class Workout(db.Model):
     __tablename__ = 'workouts'
