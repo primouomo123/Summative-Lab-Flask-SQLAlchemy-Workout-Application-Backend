@@ -1,7 +1,8 @@
-from flask import Flask, make_response
+from flask import Flask, make_response, request, jsonify
 from flask_migrate import Migrate
+from marshmallow import ValidationError
 
-from models import db, Exercise, Workout, WorkoutExercises
+from models import db, Exercise, Workout, WorkoutExercises, ExerciseSchema, WorkoutSchema, WorkoutExercisesSchema
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -16,11 +17,23 @@ db.init_app(app)
 @app.route('/')
 def home():
     return make_response(
-        '<h1>Welcome to the Workout Tracker API</h1><p>Use the endpoints to manage your workouts and exercises.</p>')
+        '<h1>Welcome to the Workout Tracker API</h1><p>Use the endpoints to manage your workouts and exercises.</p>'
+        '<ul>'
+        '<li>GET /workouts - List all workouts</li>'
+        '<li>GET /workouts/&lt;id&gt; - Show a single workout with its associated exercises</li>'
+        '<li>POST /workouts - Create a workout</li>'
+        '<li>DELETE /workouts/&lt;id&gt; - Delete a workout</li>'
+        '<li>GET /exercises - List all exercises</li>'
+        '<li>GET /exercises/&lt;id&gt; - Show an exercise and associated workouts</li>'
+        '<li>POST /exercises - Create an exercise</li>'
+        '<li>DELETE /exercises/&lt;id&gt; - Delete an exercise</li>'
+        '<li>POST /workouts/&lt;workout_id&gt;/exercises/&lt;exercise_id&gt;/workout_exercises - Add an exercise to a workout, including reps/sets/duration</li>'
+        '</ul>')
 
 # List all workouts
 @app.route('/workouts', methods=['GET'])
 def get_workouts():
+    workouts = Workout.query.all()
     pass
 
 # Stretch goal: include reps/sets/duration data from WorkoutExercises
