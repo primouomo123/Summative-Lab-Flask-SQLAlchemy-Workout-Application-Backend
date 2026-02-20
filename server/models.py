@@ -2,9 +2,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData, CheckConstraint
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
-from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow import Schema, fields, validate, ValidationError, RAISE, post_load
 
-from datetime import date
+from datetime import date as dt_date
 
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
@@ -26,15 +26,17 @@ class WorkoutExercises(db.Model):
         CheckConstraint('reps > 0', name='check_reps_positive'),
         CheckConstraint('sets > 0', name='check_sets_positive'),
         CheckConstraint('duration_seconds >= 0', name='check_duration_non_negative'),
+        CheckConstraint('workout_id IN (SELECT id FROM workouts)', name='check_workout_id_valid'),
+        CheckConstraint('exercise_id IN (SELECT id FROM exercises)', name='check_exercise_id_valid'),
     )
 
-    # Validations to ensure data integrity at the application level
+    # Model Validations to ensure data integrity at the application level
     @validates('reps', 'sets')
     def validate_reps(self, key, value):
         if not isinstance(value, int):
-            raise TypeError(f'{key} must be integers')
+            raise TypeError(f'{key} must be an integer')
         if value <= 0:
-            raise ValueError(f'{key} must be positive integers')
+            raise ValueError(f'{key} must be a positive integer')
         return value
     
     @validates('duration_seconds')
@@ -43,7 +45,23 @@ class WorkoutExercises(db.Model):
             raise TypeError(f'{key} must be an integer')
         if value < 0:
             raise ValueError(f'{key} must be a non-negative integer')
-        return value 
+        return value
+    
+    @validates('workout_id')
+    def validate_workout_id(self, key, value):
+        if not isinstance(value, int):
+            raise TypeError(f'{key} must be an integer')
+        if not Workout.query.get(value):
+            raise ValueError(f'{key} must reference an existing workout id')
+        return value
+
+    @validates('exercise_id')
+    def validate_exercise_id(self, key, value):
+        if not isinstance(value, int):
+            raise TypeError(f'{key} must be an integer')
+        if not Exercise.query.get(value):
+            raise ValueError(f'{key} must reference an existing exercise id')
+        return value
 
     # Relationship between WorkoutExercises and Exercise
     exercise = db.relationship('Exercise', back_populates='workout_exercises')
@@ -64,6 +82,47 @@ class WorkoutExercisesSchema(Schema):
     sets = fields.Int(required=True, validate=validate.Range(min=1))
     duration_seconds = fields.Int(required=True, validate=validate.Range(min=0))
 
+    exercise = fields.Nested(lambda: ExerciseSchema(exclude=('workout_exercises', 'workouts')), dump_only=True)
+    workout = fields.Nested(lambda: WorkoutSchema(exclude=('workout_exercises', 'exercises')), dump_only=True)
+
+    class Meta:
+        unknown = RAISE  # Raise an error if unknown fields are included in the input data
+    
+    # Schema Validations to ensure data integrity at the application level
+    @validates('workout_id')
+    def validate_workout_id(self, value):
+        if not Workout.query.get(value):
+            raise ValidationError(f'workout_id {value} does not reference an existing workout') 
+        return value
+    
+    @validates('exercise_id')
+    def validate_exercise_id(self, value):
+        if not Exercise.query.get(value):
+            raise ValidationError(f'exercise_id {value} does not reference an existing exercise') 
+        return value
+    
+    @validates('reps')
+    def validate_reps(self, value):
+        if value <= 0:
+            raise ValidationError('reps must be a positive integer')
+        return value
+    
+    @validates('sets')
+    def validate_sets(self, value):
+        if value <= 0:
+            raise ValidationError('sets must be a positive integer')
+        return value
+    
+    @validates('duration_seconds')
+    def validate_duration_seconds(self, value):
+        if value < 0:
+            raise ValidationError('duration_seconds must be a non-negative integer')
+        return value
+    
+    @post_load
+    def make_workout_exercises(self, data, **kwargs):
+        return WorkoutExercises(**data)
+
 
 # Exercise Table Model
 class Exercise(db.Model):
@@ -80,9 +139,10 @@ class Exercise(db.Model):
     __table_args__ = (
         CheckConstraint('length(name) > 0', name='check_name_length'),
         CheckConstraint(f'category IN ({", ".join(repr(c) for c in categories)})', name='check_category_valid'),
+        CheckConstraint('equipment_needed IN (0, 1)', name='check_equipment_needed_boolean'),
     )
 
-    # Validations to ensure data integrity at the application level
+    # Model Validations to ensure data integrity at the application level
     @validates('name')
     def validate_name(self, key, value):
         if not isinstance(value, str):
@@ -97,6 +157,12 @@ class Exercise(db.Model):
             raise TypeError(f'{key} must be a string')
         if value not in self.categories:
             raise ValueError(f'Invalid {key}: {value}, you must choose from {self.categories}')
+        return value
+    
+    @validates('equipment_needed')
+    def validate_equipment_needed(self, key, value):
+        if not isinstance(value, bool):
+            raise TypeError(f'{key} must be a boolean')
         return value
 
     # Relationship between Exercise and WorkoutExercises
@@ -117,6 +183,35 @@ class ExerciseSchema(Schema):
     category = fields.Str(required=True, validate=validate.OneOf(Exercise.categories))
     equipment_needed = fields.Bool(required=True)
 
+    workout_exercises = fields.Nested(lambda: WorkoutExercisesSchema(exclude=('exercise',)), many=True, dump_only=True)
+    workouts = fields.Nested(lambda: WorkoutSchema(exclude=('workout_exercises', 'exercises')), many=True, dump_only=True)
+
+    class Meta:
+        unknown = RAISE  # Raise an error if unknown fields are included in the input data
+    
+    # Schema Validations to ensure data integrity at the application level
+    @validates('name')
+    def validate_name(self, value):
+        if len(value) == 0:
+            raise ValidationError('name cannot be empty')
+        return value
+    
+    @validates('category')
+    def validate_category(self, value):
+        if value not in Exercise.categories:
+            raise ValidationError(f'Invalid category: {value}, you must choose from {Exercise.categories}')
+        return value
+    
+    @validates('equipment_needed')
+    def validate_equipment_needed(self, value):
+        if not isinstance(value, bool):
+            raise ValidationError('equipment_needed must be a boolean')
+        return value
+    
+    @post_load
+    def make_exercise(self, data, **kwargs):
+        return Exercise(**data)
+
 
 
 class Workout(db.Model):
@@ -129,17 +224,18 @@ class Workout(db.Model):
 
     # Table-level constraints to ensure data integrity
     __table_args__ = (
+        CheckConstraint('date <= CURRENT_DATE', name='check_date_not_future'),
         CheckConstraint('duration_minutes > 0', name='check_duration_positive'),
         CheckConstraint('length(notes) > 0', name='check_notes_length'),
     )
 
-    # Validations to ensure data integrity at the application level
+    # Model Validations to ensure data integrity at the application level
     @validates('date')
     def validate_date(self, key, value):
-        if not isinstance(value, date):
+        if not isinstance(value, dt_date):
             raise TypeError(f'{key} must be a datetime.date object')
-        if not value:
-            raise ValueError(f'{key} cannot be empty')
+        if value > dt_date.today():
+            raise ValueError(f'{key} cannot be in the future')
         return value
     
     @validates('duration_minutes')
@@ -175,3 +271,33 @@ class WorkoutSchema(Schema):
     date = fields.Date(required=True)
     duration_minutes = fields.Int(required=True, validate=validate.Range(min=1))
     notes = fields.Str(required=True, validate=validate.Length(min=1, max=255))
+
+    workout_exercises = fields.Nested(lambda: WorkoutExercisesSchema(exclude=('workout',)), many=True, dump_only=True)
+    exercises = fields.Nested(lambda: ExerciseSchema(exclude=('workout_exercises', 'workouts')), many=True, dump_only=True)
+
+    class Meta:
+        unknown = RAISE  # Raise an error if unknown fields are included in the input data
+    
+    # Schema Validations to ensure data integrity at the application level
+    @validates('date')
+    def validate_date(self, value):
+        # Ensure date is not in the future
+        if value > dt_date.today():
+            raise ValidationError("Workout date cannot be in the future.")
+        return value
+    
+    @validates('duration_minutes')
+    def validate_duration_minutes(self, value):
+        if value <= 0:
+            raise ValidationError('duration_minutes must be a positive integer')
+        return value
+    
+    @validates('notes')
+    def validate_notes(self, value):
+        if len(value) == 0 or len(value) > 255:
+            raise ValidationError('notes must be between 1 and 255 characters long')
+        return value
+    
+    @post_load
+    def make_workout(self, data, **kwargs):
+        return Workout(**data)
