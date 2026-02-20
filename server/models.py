@@ -4,7 +4,7 @@ from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from marshmallow import Schema, fields, validate, ValidationError, RAISE
 
-from datetime import date
+from datetime import date as dt_date
 
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
@@ -210,6 +210,7 @@ class Workout(db.Model):
 
     # Table-level constraints to ensure data integrity
     __table_args__ = (
+        CheckConstraint('date <= CURRENT_DATE', name='check_date_not_future'),
         CheckConstraint('duration_minutes > 0', name='check_duration_positive'),
         CheckConstraint('length(notes) > 0', name='check_notes_length'),
     )
@@ -217,10 +218,10 @@ class Workout(db.Model):
     # Model Validations to ensure data integrity at the application level
     @validates('date')
     def validate_date(self, key, value):
-        if not isinstance(value, date):
+        if not isinstance(value, dt_date):
             raise TypeError(f'{key} must be a datetime.date object')
-        if not value:
-            raise ValueError(f'{key} cannot be empty')
+        if value > dt_date.today():
+            raise ValueError(f'{key} cannot be in the future')
         return value
     
     @validates('duration_minutes')
@@ -263,8 +264,9 @@ class WorkoutSchema(Schema):
     # Schema Validations to ensure data integrity at the application level
     @validates('date')
     def validate_date(self, value):
-        if not isinstance(value, date):
-            raise ValidationError('date must be a datetime.date object')
+        # Ensure date is not in the future
+        if value > dt_date.today():
+            raise ValidationError("Workout date cannot be in the future.")
         return value
     
     @validates('duration_minutes')
