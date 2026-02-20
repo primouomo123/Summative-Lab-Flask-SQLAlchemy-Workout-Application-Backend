@@ -179,8 +179,8 @@ class ExerciseSchema(Schema):
     category = fields.Str(required=True, validate=validate.OneOf(Exercise.categories))
     equipment_needed = fields.Bool(required=True)
 
-    workout_exercises = fields.Nested(lambda: WorkoutExercisesSchema(exclude=('exercise',)), dump_only=True)
-    workouts = fields.Nested(lambda: WorkoutSchema(exclude=('workout_exercises', 'exercises')), dump_only=True)
+    workout_exercises = fields.Nested(lambda: WorkoutExercisesSchema(exclude=('exercise',)), many=True, dump_only=True)
+    workouts = fields.Nested(lambda: WorkoutSchema(exclude=('workout_exercises', 'exercises')), many=True, dump_only=True)
 
     class Meta:
         unknown = RAISE  # Raise an error if unknown fields are included in the input data
@@ -264,8 +264,8 @@ class WorkoutSchema(Schema):
     duration_minutes = fields.Int(required=True, validate=validate.Range(min=1))
     notes = fields.Str(required=True, validate=validate.Length(min=1, max=255))
 
-    workout_exercises = fields.Nested(lambda: WorkoutExercisesSchema(exclude=('workout',)), dump_only=True)
-    exercises = fields.Nested(lambda: ExerciseSchema(exclude=('workout_exercises', 'workouts')), dump_only=True)
+    workout_exercises = fields.Nested(lambda: WorkoutExercisesSchema(exclude=('workout',)), many=True, dump_only=True)
+    exercises = fields.Nested(lambda: ExerciseSchema(exclude=('workout_exercises', 'workouts')), many=True, dump_only=True)
 
     class Meta:
         unknown = RAISE  # Raise an error if unknown fields are included in the input data
