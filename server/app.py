@@ -76,7 +76,9 @@ def delete_workout(id):
 # List all exercises
 @app.route('/exercises', methods=['GET'])
 def get_exercises():
-    pass
+    exercises = Exercise.query.all()
+    body = ExerciseSchema(many=True).dump(exercises)
+    return jsonify(body), 200
 
 # Show an exercise and associated workouts
 @app.route('/exercises/<id>', methods=['GET'])
