@@ -99,7 +99,7 @@ The API will be available at http://localhost:5555
 
 - Create an exercise:
   ```bash
-  curl -X POST http://localhost:5555/exercises -H "Content-Type: application/json" -d '{"name": "Push Up", "category": "Strength", "equipment_needed": false}'
+  curl -X POST http://localhost:5555/exercises -H "Content-Type: application/json" -d '{"name": "Leg Raise", "category": "Strength", "equipment_needed": false}'
   ```
 
 - Delete an exercise:
