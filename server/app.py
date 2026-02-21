@@ -91,7 +91,7 @@ def get_exercises():
 @app.route('/exercises/<int:id>', methods=['GET'])
 def get_exercise(id):
     exercise = Exercise.query.get(id)
-    schema = ExerciseSchema()
+    schema = ExerciseSchema(exclude=('workout_exercises',))
     if exercise:
         body = schema.dump(exercise)
         return jsonify(body), 200

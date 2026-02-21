@@ -148,6 +148,8 @@ class Exercise(db.Model):
             raise TypeError(f'{key} must be a string')
         if len(value) == 0:
             raise ValueError(f'{key} cannot be empty')
+        if value in [exercise.name for exercise in Exercise.query.all()]:
+            raise ValueError(f'{key} must be unique, {value} already exists')
         return value
 
     @model_validates('category')
@@ -194,6 +196,8 @@ class ExerciseSchema(Schema):
     def validate_name(self, value, **kwargs):
         if len(value) == 0:
             raise ValidationError('name cannot be empty')
+        if value in [exercise.name for exercise in Exercise.query.all()]:
+            raise ValidationError(f'name must be unique, {value} already exists')
         return value
     
     @schema_validates('category')

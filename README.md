@@ -61,6 +61,59 @@ The API will be available at http://localhost:5555
 ### WorkoutExercises
 - `POST /workouts/<workout_id>/exercises/<exercise_id>/workout_exercises` — Add an exercise to a workout, including reps/sets/duration
 
+## Example curl Commands
+
+### Workouts
+
+- List all workouts:
+  ```bash
+  curl -X GET http://localhost:5555/workouts
+  ```
+
+- Get a single workout:
+  ```bash
+  curl -X GET http://localhost:5555/workouts/1
+  ```
+
+- Create a workout:
+  ```bash
+  curl -X POST http://localhost:5555/workouts -H "Content-Type: application/json" -d '{"date": "2026-02-20", "duration_minutes": 30, "notes": "Morning workout"}'
+  ```
+
+- Delete a workout:
+  ```bash
+  curl -X DELETE http://localhost:5555/workouts/3
+  ```
+
+### Exercises
+
+- List all exercises:
+  ```bash
+  curl -X GET http://localhost:5555/exercises
+  ```
+
+- Get a single exercise:
+  ```bash
+  curl -X GET http://localhost:5555/exercises/1
+  ```
+
+- Create an exercise:
+  ```bash
+  curl -X POST http://localhost:5555/exercises -H "Content-Type: application/json" -d '{"name": "Push Up", "category": "Strength", "equipment_needed": false}'
+  ```
+
+- Delete an exercise:
+  ```bash
+  curl -X DELETE http://localhost:5555/exercises/5
+  ```
+
+### WorkoutExercises (Add Exercise to Workout)
+
+- Add an exercise to a workout:
+  ```bash
+  curl -X POST http://localhost:5555/workouts/1/exercises/1/workout_exercises -H "Content-Type: application/json" -d '{"reps": 10, "sets": 2, "duration_seconds": 60}'
+  ```
+
 ## Notes
 - All endpoints require and return JSON data.
 - Database constraints and validations ensure data integrity.
