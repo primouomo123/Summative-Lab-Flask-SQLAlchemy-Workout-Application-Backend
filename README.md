@@ -5,29 +5,43 @@ A Flask and SQLAlchemy-based backend for tracking workouts and exercises. The AP
 
 ## Installation Instructions
 1. Clone the repository:
-   ```bash
-   git clone <repo-url>
-   cd Summative-Lab-Flask-SQLAlchemy-Workout-Application-Backend
-   ```
+```bash
+git clone <repo-url>
+cd Summative-Lab-Flask-SQLAlchemy-Workout-Application-Backend
+```
 2. Install dependencies using pipenv:
-   ```bash
-   pipenv install
-   pipenv shell
-   ```
+```bash
+pipenv install
+pipenv shell
+```
 3. Run database migrations:
-   ```bash
-   flask db upgrade
-   ```
+```bash
+flask db upgrade
+```
 4. Seed the database with sample data:
-   ```bash
-   python server/seed.py
-   ```
+```bash
+python server/seed.py
+```
+
+or:
+
+```bash
+cd server
+python seed.py
+```
 
 ## Run Instructions
 Start the Flask development server:
 ```bash
 python server/app.py
 ```
+
+or:
+```bash
+cd server
+python app.py
+```
+
 The API will be available at http://localhost:5555
 
 ## API Endpoints
@@ -52,5 +66,3 @@ The API will be available at http://localhost:5555
 - Database constraints and validations ensure data integrity.
 - Marshmallow schemas are used for serialization and validation.
 
----
-For questions or issues, please contact the project maintainer.
