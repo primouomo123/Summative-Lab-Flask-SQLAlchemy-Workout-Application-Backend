@@ -16,8 +16,15 @@ pipenv shell
 ```
 3. Run database migrations:
 ```bash
+server/flask db upgrade
+```
+
+or:
+```bash
+cd server
 flask db upgrade
 ```
+
 4. Seed the database with sample data:
 ```bash
 python server/seed.py
