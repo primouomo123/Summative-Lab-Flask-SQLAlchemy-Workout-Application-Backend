@@ -10,8 +10,11 @@ metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
 
 
-# Join table Model for many-to-many relationship between Workout and Exercise
 class WorkoutExercises(db.Model):
+    """
+    Association table for many-to-many relationship between Workout and Exercise.
+    Stores reps, sets, and duration for each exercise in a workout.
+    """
     __tablename__ = 'workout_exercises'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -21,14 +24,12 @@ class WorkoutExercises(db.Model):
     sets = db.Column(db.Integer, nullable=False)
     duration_seconds = db.Column(db.Integer, nullable=False)
 
-    # Table-level constraints to ensure data integrity
     __table_args__ = (
         CheckConstraint('reps > 0', name='check_reps_positive'),
         CheckConstraint('sets > 0', name='check_sets_positive'),
         CheckConstraint('duration_seconds >= 0', name='check_duration_non_negative'),
     )
 
-    # Model Validations to ensure data integrity at the application level
     @model_validates('reps', 'sets')
     def validate_reps(self, key, value):
         if not isinstance(value, int):
@@ -61,18 +62,19 @@ class WorkoutExercises(db.Model):
             raise ValueError(f'{key} must reference an existing exercise id')
         return value
 
-    # Relationship between WorkoutExercises and Exercise
     exercise = db.relationship('Exercise', back_populates='workout_exercises')
 
-    # Relationship between WorkoutExercises and Workout
     workout = db.relationship('Workout', back_populates='workout_exercises')
 
     def __repr__(self):
         return f'<WorkoutExercises id={self.id} workout_id={self.workout_id} exercise_id={self.exercise_id} reps={self.reps} sets={self.sets} duration_seconds={self.duration_seconds}>'
 
 
-# WorkoutExercise Schema for serialization/deserialization
 class WorkoutExercisesSchema(Schema):
+    """
+    Marshmallow schema for WorkoutExercises model.
+    Handles serialization, deserialization, and validation for workout-exercise associations.
+    """
     id = fields.Int(dump_only=True)
     workout_id = fields.Int(required=True)
     exercise_id = fields.Int(required=True)
@@ -84,10 +86,9 @@ class WorkoutExercisesSchema(Schema):
     workout = fields.Nested(lambda: WorkoutSchema(exclude=('workout_exercises', 'exercises')), dump_only=True)
 
     class Meta:
-        unknown = RAISE  # Raise an error if unknown fields are included in the input data
-        ordered = True  # Ensure fields are serialized in the order they are defined
+        unknown = RAISE
+        ordered = True
     
-    # Schema Validations to ensure data integrity at the application level
     @schema_validates('workout_id')
     def validate_workout_id(self, value, **kwargs):
         if not Workout.query.get(value):
@@ -123,8 +124,11 @@ class WorkoutExercisesSchema(Schema):
         return WorkoutExercises(**data)
 
 
-# Exercise Table Model
 class Exercise(db.Model):
+    """
+    Model representing an exercise.
+    Includes name, category, and equipment_needed fields.
+    """
     __tablename__ = 'exercises'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -134,14 +138,12 @@ class Exercise(db.Model):
 
     categories = ('Cardio', 'Strength', 'Flexibility', 'Balance')
 
-    # Table-level constraints to ensure data integrity
     __table_args__ = (
         CheckConstraint('length(name) > 0', name='check_name_length'),
         CheckConstraint(f'category IN ({", ".join(repr(c) for c in categories)})', name='check_category_valid'),
         CheckConstraint('equipment_needed IN (0, 1)', name='check_equipment_needed_boolean'),
     )
 
-    # Model Validations to ensure data integrity at the application level
     @model_validates('name')
     def validate_name(self, key, value):
         if not isinstance(value, str):
@@ -166,10 +168,8 @@ class Exercise(db.Model):
             raise TypeError(f'{key} must be a boolean')
         return value
 
-    # Relationship between Exercise and WorkoutExercises
     workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise', cascade='all, delete-orphan')
     
-    # Association Proxy to access workouts directly from Exercise through WorkoutExercises
     workouts = association_proxy('workout_exercises', 'workout',
                                  creator=lambda workout_object: WorkoutExercises(workout=workout_object))
     
@@ -177,8 +177,11 @@ class Exercise(db.Model):
         return f'<Exercise id={self.id} name={self.name} category={self.category} equipment_needed={self.equipment_needed}>'
 
 
-# Exercise Schema for serialization/deserialization
 class ExerciseSchema(Schema):
+    """
+    Marshmallow schema for Exercise model.
+    Handles serialization, deserialization, and validation for exercises.
+    """
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
     category = fields.Str(required=True, validate=validate.OneOf(Exercise.categories))
@@ -188,8 +191,8 @@ class ExerciseSchema(Schema):
     workouts = fields.Nested(lambda: WorkoutSchema(exclude=('workout_exercises', 'exercises')), many=True, dump_only=True)
 
     class Meta:
-        unknown = RAISE  # Raise an error if unknown fields are included in the input data
-        ordered = True  # Ensure fields are serialized in the order they are defined
+        unknown = RAISE
+        ordered = True
     
     # Schema Validations to ensure data integrity at the application level
     @schema_validates('name')
@@ -219,6 +222,10 @@ class ExerciseSchema(Schema):
 
 
 class Workout(db.Model):
+    """
+    Model representing a workout session.
+    Includes date, duration, and notes fields.
+    """
     __tablename__ = 'workouts'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -269,8 +276,11 @@ class Workout(db.Model):
         return f'<Workout id={self.id} date={self.date} duration_minutes={self.duration_minutes} notes={self.notes}>'
 
 
-# Workout Schema for serialization/deserialization
 class WorkoutSchema(Schema):
+    """
+    Marshmallow schema for Workout model.
+    Handles serialization, deserialization, and validation for workouts.
+    """
     id = fields.Int(dump_only=True)
     date = fields.Date(required=True)
     duration_minutes = fields.Int(required=True, validate=validate.Range(min=1))
@@ -280,8 +290,8 @@ class WorkoutSchema(Schema):
     exercises = fields.Nested(lambda: ExerciseSchema(exclude=('workout_exercises', 'workouts')), many=True, dump_only=True)
 
     class Meta:
-        unknown = RAISE  # Raise an error if unknown fields are included in the input data
-        ordered = True  # Ensure fields are serialized in the order they are defined
+        unknown = RAISE
+        ordered = True
     
     # Schema Validations to ensure data integrity at the application level
     @schema_validates('date')

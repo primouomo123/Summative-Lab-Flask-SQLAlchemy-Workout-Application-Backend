@@ -16,7 +16,6 @@ migrate = Migrate(app, db)
 
 db.init_app(app)
 
-# Home route
 @app.route('/')
 def home():
     return make_response(
@@ -33,7 +32,6 @@ def home():
         '<li>POST /workouts/&lt;workout_id&gt;/exercises/&lt;exercise_id&gt;/workout_exercises - Add an exercise to a workout, including reps/sets/duration</li>'
         '</ul>')
 
-# List all workouts
 @app.route('/workouts', methods=['GET'])
 def get_workouts():
     workouts = Workout.query.all()
@@ -41,8 +39,6 @@ def get_workouts():
     body = schema.dump(workouts)
     return jsonify(body), 200
 
-# Stretch goal: include reps/sets/duration data from WorkoutExercises
-# Show a single workout with its associated exercises
 @app.route('/workouts/<int:id>', methods=['GET'])
 def get_workout(id):
     workout = Workout.query.get(id)
@@ -53,7 +49,6 @@ def get_workout(id):
     else:
         return jsonify({'error': 'Workout not found'}), 404
 
-# Create a workout
 @app.route('/workouts', methods=['POST'])
 def create_workout():
     try:
@@ -67,8 +62,6 @@ def create_workout():
     except ValidationError as err:
         return jsonify(err.messages), 400
 
-# Stretch goal: delete associated WorkoutExercises
-# Delete a workout
 @app.route('/workouts/<int:id>', methods=['DELETE'])
 def delete_workout(id):
     workout = Workout.query.get(id)
@@ -79,7 +72,6 @@ def delete_workout(id):
     else:
         return jsonify({'error': 'Workout not found'}), 404
 
-# List all exercises
 @app.route('/exercises', methods=['GET'])
 def get_exercises():
     exercises = Exercise.query.all()
@@ -87,7 +79,6 @@ def get_exercises():
     body = schema.dump(exercises)
     return jsonify(body), 200
 
-# Show an exercise and associated workouts
 @app.route('/exercises/<int:id>', methods=['GET'])
 def get_exercise(id):
     exercise = Exercise.query.get(id)
@@ -98,7 +89,6 @@ def get_exercise(id):
     else:
         return jsonify({'error': 'Exercise not found'}), 404
 
-# Create an exercise
 @app.route('/exercises', methods=['POST'])
 def create_exercise():
     try:
@@ -112,8 +102,6 @@ def create_exercise():
     except ValidationError as err:
         return jsonify(err.messages), 400
 
-# Stretch goal: delete associated WorkoutExercises
-# Delete an exercise
 @app.route('/exercises/<int:id>', methods=['DELETE'])
 def delete_exercise(id):
     exercise = Exercise.query.get(id)
@@ -124,7 +112,6 @@ def delete_exercise(id):
     else:
         return jsonify({'error': 'Exercise not found'}), 404
 
-# Add an exercise to a workout, including reps/sets/duration
 @app.route('/workouts/<int:workout_id>/exercises/<int:exercise_id>/workout_exercises', methods=['POST'])
 def add_exercise_to_workout(workout_id, exercise_id):
     workout = Workout.query.get(workout_id)
